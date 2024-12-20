@@ -8,15 +8,19 @@ function AddEdit() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     
-    console.log('AddEdit mounted with params:', { type, id });
-  
     // Define isEditing based on id existence
     const isEditing = Boolean(id);
+    
+    useEffect(() => {
+      // Validate type parameter
+      if (!type || (type !== 'household' && type !== 'contact')) {
+        console.error('Invalid type:', type);
+        navigate('/');
+      }
+    }, [type, navigate]);
   
-    // Validate type parameter
+    // If type is invalid, don't render the form
     if (!type || (type !== 'household' && type !== 'contact')) {
-      console.error('Invalid type:', type);
-      navigate('/');
       return null;
     }
   

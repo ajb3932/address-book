@@ -1,30 +1,24 @@
 const express = require('express');
 const router = express.Router();
+const householdController = require('../controllers/householdController');
 const auth = require('../middleware/auth');
-const {
-  getHouseholds,
-  getHousehold,
-  createHousehold,
-  updateHousehold,
-  deleteHousehold
-} = require('../controllers/householdController');
 
 // Protect all routes
 router.use(auth);
 
-// Get all households
-router.get('/', getHouseholds);
+// Get all households (with populated contacts)
+router.get('/', householdController.getHouseholds);
 
 // Get single household
-router.get('/:id', getHousehold);
+router.get('/:id', householdController.getHousehold);
 
 // Create household
-router.post('/', createHousehold);
+router.post('/', householdController.createHousehold);
 
 // Update household
-router.put('/:id', updateHousehold);
+router.put('/:id', householdController.updateHousehold);
 
 // Delete household
-router.delete('/:id', deleteHousehold);
+router.delete('/:id', householdController.deleteHousehold);
 
 module.exports = router;

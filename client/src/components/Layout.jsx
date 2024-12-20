@@ -5,9 +5,6 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  console.log('Current location:', location.pathname); // Add this
-  console.log('Navigate function:', !!navigate); // Add this to check if navigate exists
-
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
@@ -18,14 +15,10 @@ function Layout() {
   };
 
   const handleAddHousehold = () => {
-    console.log('Add Household clicked'); // Add this
-    console.log('Attempting to navigate to /add/household');
     navigate('/add/household');
   };
   
   const handleAddContact = () => {
-    console.log('Add Contact clicked'); // Add this
-    console.log('Attempting to navigate to /add/contact');
     navigate('/add/contact');
   };
 

@@ -1,38 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const {
-  getContacts,
-  getContact,  // Add this import
-  getContactsByHousehold,
-  createContact,
-  updateContact,
-  deleteContact,
-  searchContacts
-} = require('../controllers/contactController');
+const contactController = require('../controllers/contactController');
 
 // Protect all routes
 router.use(auth);
 
 // Get all contacts
-router.get('/', getContacts);
+router.get('/', contactController.getContacts);
 
-// Get single contact (add this route before any other routes with parameters)
-router.get('/:id', getContact);
-
-// Search contacts
-router.get('/search', searchContacts);
+// Search contacts (must come before /:id)
+router.get('/search', contactController.searchContacts);
 
 // Get contacts by household
-router.get('/household/:householdId', getContactsByHousehold);
+router.get('/household/:householdId', contactController.getContactsByHousehold);
+
+// Get single contact
+router.get('/:id', contactController.getContact);
 
 // Create contact
-router.post('/', createContact);
+router.post('/', contactController.createContact);
 
 // Update contact
-router.put('/:id', updateContact);
+router.put('/:id', contactController.updateContact);
 
 // Delete contact
-router.delete('/:id', deleteContact);
+router.delete('/:id', contactController.deleteContact);
 
 module.exports = router;

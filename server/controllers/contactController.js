@@ -73,7 +73,7 @@ exports.updateContact = async (req, res) => {
 
     // If household changed, update household references
     if (household && household !== contact.household?.toString()) {
-      // Remove from old household
+      // Remove contact from old household's contacts array
       if (contact.household) {
         await Household.findByIdAndUpdate(
           contact.household,
@@ -81,7 +81,7 @@ exports.updateContact = async (req, res) => {
         );
       }
 
-      // Add to new household
+      // Add contact to new household's contacts array
       await Household.findByIdAndUpdate(
         household,
         { $push: { contacts: contact._id } }
@@ -101,31 +101,6 @@ exports.updateContact = async (req, res) => {
       .populate('household', 'householdName');
     
     res.json(updatedContact);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-};
-
-// Delete contact
-exports.deleteContact = async (req, res) => {
-  try {
-    const contact = await Contact.findById(req.params.id);
-
-    if (!contact) {
-      return res.status(404).json({ msg: 'Contact not found' });
-    }
-
-    // Remove contact from household
-    if (contact.household) {
-      await Household.findByIdAndUpdate(
-        contact.household,
-        { $pull: { contacts: contact._id } }
-      );
-    }
-
-    await contact.deleteOne();
-    res.json({ msg: 'Contact deleted' });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -172,5 +147,20 @@ exports.getContact = async (req, res) => {
       return res.status(404).json({ msg: 'Contact not found' });
     }
     res.status(500).send('Server error');
+  }
+};
+
+exports.deleteContact = async (req, res) => {
+  try {
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) {
+      return res.status(404).json({ message: 'Contact not found' });
+    }
+
+    await contact.deleteOne();
+    res.json({ message: 'Contact deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting contact:', error);
+    res.status(500).json({ message: 'Error deleting contact', error: error.message });
   }
 };

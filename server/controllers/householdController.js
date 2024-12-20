@@ -3,97 +3,93 @@ const Contact = require('../models/Contact');
 
 // Get all households
 exports.getHouseholds = async (req, res) => {
-  try {
-    const households = await Household.find()
-      .populate('contacts')
-      .sort({ householdName: 1 });
-    res.json(households);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-};
+    try {
+      const households = await Household.find()
+        .populate({
+          path: 'contacts',
+          select: 'firstName surname birthday phoneNumber'
+        });
+      res.json(households);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching households', error: error.message });
+    }
+  };
 
 // Get single household
 exports.getHousehold = async (req, res) => {
-  try {
-    const household = await Household.findById(req.params.id).populate('contacts');
-    if (!household) {
-      return res.status(404).json({ msg: 'Household not found' });
+    try {
+      const household = await Household.findById(req.params.id)
+        .populate({
+          path: 'contacts',
+          select: 'firstName surname birthday phoneNumber'
+        });
+      
+      if (!household) {
+        return res.status(404).json({ message: 'Household not found' });
+      }
+      res.json(household);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching household', error: error.message });
     }
-    res.json(household);
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: 'Household not found' });
-    }
-    res.status(500).send('Server error');
-  }
-};
+  };
 
 // Create household
 exports.createHousehold = async (req, res) => {
-  try {
-    const { householdName, address } = req.body;
-
-    const household = new Household({
-      householdName,
-      address
-    });
-
-    await household.save();
-    res.json(household);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-};
+    try {
+      const household = new Household(req.body);
+      await household.save();
+      const populatedHousehold = await Household.findById(household._id)
+        .populate({
+          path: 'contacts',
+          select: 'firstName surname birthday phoneNumber'
+        });
+      res.status(201).json(populatedHousehold);
+    } catch (error) {
+      res.status(500).json({ message: 'Error creating household', error: error.message });
+    }
+  };
 
 // Update household
 exports.updateHousehold = async (req, res) => {
-  try {
-    const { householdName, address } = req.body;
-    const household = await Household.findById(req.params.id);
-
-    if (!household) {
-      return res.status(404).json({ msg: 'Household not found' });
+    try {
+      const household = await Household.findByIdAndUpdate(
+        req.params.id,
+        req.body,
+        { new: true, runValidators: true }
+      ).populate({
+        path: 'contacts',
+        select: 'firstName surname birthday phoneNumber'
+      });
+      
+      if (!household) {
+        return res.status(404).json({ message: 'Household not found' });
+      }
+      res.json(household);
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating household', error: error.message });
     }
-
-    household.householdName = householdName;
-    household.address = address;
-
-    await household.save();
-    res.json(household);
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: 'Household not found' });
-    }
-    res.status(500).send('Server error');
-  }
-};
+  };
 
 // Delete household
 exports.deleteHousehold = async (req, res) => {
   try {
     const household = await Household.findById(req.params.id);
-
     if (!household) {
-      return res.status(404).json({ msg: 'Household not found' });
+      return res.status(404).json({ message: 'Household not found' });
     }
 
-    // Delete all contacts associated with this household
-    await Contact.deleteMany({ household: req.params.id });
+    // Update all contacts that belong to this household
+    await Contact.updateMany(
+      { household: req.params.id },
+      { $unset: { household: 1 } }
+    );
 
     // Delete the household
-    await household.remove();
+    await household.deleteOne();
 
-    res.json({ msg: 'Household deleted' });
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === 'ObjectId') {
-      return res.status(404).json({ msg: 'Household not found' });
-    }
-    res.status(500).send('Server error');
+    res.json({ message: 'Household deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting household:', error);
+    res.status(500).json({ message: 'Error deleting household', error: error.message });
   }
 };
